@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -12,23 +12,40 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { SignType } from "../../types/types";
+import { SignType, UserType } from "../../types/types";
+import { getUser } from "../../api/get/getUser";
+import { localStorageSetter } from "../../utils/localStorage";
+import { Navigate, useNavigate } from "react-router-dom";
 
 // TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
 
 export default function SignIn({ setSearchParams }: SignType) {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const navigate = useNavigate();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+   const allUsers = await getUser()
+   if(allUsers){
+    const foundedUser = allUsers.find(
+      (user:UserType)=>
+        user.email === data.get('email') &&
+      user.password === data.get('password')
+    )
+    if(foundedUser){
+      localStorageSetter(
+        'Auth',
+        JSON.stringify({ isLogin: true, role: 'user' })
+      );
+
+      navigate({ pathname: '/home' });
+    }
+   }
   };
 
   const handleSignUp = () => {
     setSearchParams({ action: "signup" });
+    console.log(getUser())
   };
 
   return (
