@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -13,40 +13,63 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { SignType } from '../../types/types';
+import { postUser } from '../../api/post/postUser';
+import { Alert, Snackbar } from '@mui/material';
 
-function Copyright(props: any) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
 
-// TODO remove, this demo shouldn't need to reset the theme.
+
 const defaultTheme = createTheme();
 
 export default function SignUp({setSearchParams}:SignType) {
+  const [toastState, setToastState] = useState({
+    isOpen:false,
+    message:'All fields must be filled'
+  })
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    if(data.get("email") !== "" && data.get("password") !== ""){
+      const userData = {
+        firstName : data.get("firstName"),
+        lastName : data.get("lastName"),
+        email: data.get('email'),
+        password: data.get('password'),
+      }
+
+      postUser(userData)
+
+      // reset the inputs 
+      event.currentTarget.reset()
+    }else{
+      setToastState({isOpen:true,message:'All fields must be filled '})
+    }
   };
 
   const handleSignIn=()=>{
     setSearchParams({ action: 'signin' })
   }
-
+  
+  const handleClose = ()=>{
+    setToastState((prev) => ({ ...prev, isOpen: false }));
+  }
   return (
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xs">
+      <Snackbar
+          autoHideDuration={2000}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          open={toastState.isOpen}
+          onClose={handleClose}
+        >
+          <Alert
+            onClose={handleClose}
+            severity="error"
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {toastState.message}
+          </Alert>
+        </Snackbar>
         <CssBaseline />
         <Box
           sx={{
@@ -130,7 +153,6 @@ export default function SignUp({setSearchParams}:SignType) {
             </Grid>
           </Box>
         </Box>
-        <Copyright sx={{ mt: 5 }} />
       </Container>
     </ThemeProvider>
   );
